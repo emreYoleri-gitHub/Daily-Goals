@@ -4,7 +4,17 @@ import User from "../db/userModel.js";
 
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find();
 
+    res.status(200).json(users);
+
+    res.json(users);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+});
 
 router.post("/signin", async (req, res) => {
   try {
@@ -24,14 +34,6 @@ router.post("/signin", async (req, res) => {
         message: "Wrong password",
       });
 
-    await Token.findOneAndUpdate(
-      { userId: user._id },
-      { isLogin: true },
-      { new: true }
-    );
-
-    localStorage.setItem("user", JSON.stringify({ email, password }));
-
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({
@@ -42,17 +44,12 @@ router.post("/signin", async (req, res) => {
 
 router.post("/signup", async (req, res) => {
   try {
-    const { email, password, confrimPassword, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName } = req.body;
     const userExist = await User.findOne({ email });
 
     if (userExist)
       return res.status(400).json({
         message: "There is a user with this email",
-      });
-
-    if (password !== confrimPassword)
-      return res.status(400).json({
-        message: "Passwords do not match",
       });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -62,8 +59,6 @@ router.post("/signup", async (req, res) => {
       name: `${firstName} ${lastName}`,
       password: hashedPassword,
     });
-
-   localStorage.setItem("user", JSON.stringify({ email, hashedPassword }));
 
     res.status(200).json(user);
   } catch (error) {
@@ -77,7 +72,6 @@ router.get("/signout/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    localStorage.removeItem("user");
     await User.findOneAndUpdate(
       {
         userID: id,

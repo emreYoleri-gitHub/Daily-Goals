@@ -7,7 +7,7 @@ export const signIn =
     try {
       const { data } = await API.signIn({ email, password });
       dispatch({
-        type: userTypes.AUTH,
+        type: userTypes.SIGN_IN_SUCCESS,
         payload: data,
       });
     } catch (error) {
