@@ -1,9 +1,10 @@
-import * as React from "react";
+import React, { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { IconButton, TextField } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, ListSubheader, TextField } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
@@ -31,20 +32,31 @@ const buttonStyle = {
 };
 
 const Home = () => {
-  const [open, setOpen] = React.useState(true);
-  const [date, setDate] = React.useState(null);
-  const handleOpen = () => setOpen(true);
+  const [open, setOpen] = useState(true);
+  const [date, setDate] = useState(null);
+  const [goals, setGoals] = useState([])
+  const [goalName, setGoalName] = useState("")
+
   const handleClose = () => setOpen(false);
 
-  const [alignment, setAlignment] = React.useState("left");
+  const [alignment, setAlignment] = useState("left");
+  
 
   const handleAlignment = (event, newAlignment) => {
     setAlignment(newAlignment);
   };
 
+  const addDailyGoal = () => {
+    let newGoal = {
+      title: goalName,
+      id: uuidv4(),
+    }
+    setGoals([...goals, newGoal])
+    setGoalName("")
+  }
+
   return (
     <div>
-      <Button onClick={handleOpen}>Open modal</Button>
       <Modal open={open}>
         <Box sx={style}>
           <Typography variant="div" component="div" sx={buttonStyle}>
@@ -102,10 +114,47 @@ const Home = () => {
               </ToggleButton>
             </ToggleButtonGroup>
           </Typography>
+
+          <TextField
+            variant="filled"
+            margin="normal"
+            required
+            label="Type Your Goals"
+            color="secondary"
+            fullWidth
+            value={goalName}
+            onChange={e => setGoalName(e.target.value)}
+          />
+
+          <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal}>Add</Button>
+
+          <List
+            sx={{
+              marginTop: "1rem",
+              width: '100%',
+              bgcolor: 'background.paper',
+              overflow: 'auto',
+              maxHeight: 300,
+              '& ul': { padding: 0 },
+            }}
+            subheader={<li />}
+
+          >
+            {goals.map((item, i) => (
+              <li key={i}>
+                <ul>
+                  <ListItem>
+                    <ListItemText primary={item.title} />
+                    <Button variant="contained" color="error" size="medium">Remove</Button>
+                  </ListItem>
+                </ul>
+              </li>
+            ))}
+          </List>
         </Box>
       </Modal>
     </div>
   );
-};
 
+}
 export default Home;
