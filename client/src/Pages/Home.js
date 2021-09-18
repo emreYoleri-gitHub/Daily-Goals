@@ -4,15 +4,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { IconButton, List, ListItem, ListItemText, ListSubheader, TextField } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
-
+import ClearIcon from '@mui/icons-material/Clear';
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
-import DatePicker from "@mui/lab/DatePicker";
+import MobileDatePicker from '@mui/lab/MobileDatePicker';
+import Message from "../Components/Alert"
 
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 const style = {
   position: "absolute",
   top: "50%",
@@ -31,13 +30,20 @@ const buttonStyle = {
   marginBottom: "1rem",
 };
 
+const CreateButtonStyle = {
+  display: "flex",
+  justifyContent: "flex-end",
+}
+
 const Home = () => {
   const [open, setOpen] = useState(true);
+  const [error, setError] = useState("")
   const [date, setDate] = useState(null);
   const [goals, setGoals] = useState([])
   const [goalName, setGoalName] = useState("")
 
   const handleClose = () => setOpen(false);
+
 
   const [alignment, setAlignment] = useState("left");
   
@@ -47,14 +53,39 @@ const Home = () => {
   };
 
   const addDailyGoal = () => {
-    let newGoal = {
-      title: goalName,
-      id: uuidv4(),
+    if (goalName.length <= 5) {
+      setError("Goal name must be at least 5 characters")
+    } else if (goals.find(item => item.title.toLowerCase() === goalName.toLowerCase())) {
+      setError("This goal has already been added")
+    } else {
+      let emptyLength = 0
+
+      for (let i = 0; i < goalName.length; i++) {
+        const letter = goalName[i];
+        if (letter === " ") emptyLength += 1
+      }
+
+      if (emptyLength === goalName.length) setError("Goal must contain only null characters")
+      else {
+        let newGoal = { title: goalName, id: uuidv4(), }
+        setGoals([...goals, newGoal])
+        setGoalName("")
+        setError("")
+      }
     }
-    setGoals([...goals, newGoal])
-    setGoalName("")
   }
 
+  const deleteDailyGoal = (id) => {
+    setGoals([...goals.filter(item => item.id !== id)])
+  }
+
+  const submitHandler = e => {
+    e.preventDefault()
+    if (goals.length <= 3) setError("The number of goals must be at least three")
+    else {
+      /* code... */
+    }
+  }
   return (
     <div>
       <Modal open={open}>
@@ -66,36 +97,44 @@ const Home = () => {
           </Typography>
 
           <Typography variant="h5" component="h3">
+
             <div className="text-center mb-1 mt-1">
               Create a New Daily Goals
             </div>
+
+            {error.length ? <Message> {error} </Message> : null}
+
           </Typography>
-          <TextField
-            variant="filled"
-            margin="normal"
-            required
-            fullWidth
-            label="Daily Goals Program Name"
-            autoFocus
-            color="secondary"
-          />
 
-          <Typography variant="div" component="div">
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                disableFuture
-                label="Program Start Day"
-                openTo="year"
-                views={["year", "month", "day"]}
-                value={date}
-                onChange={(date) => setDate(date)}
-                renderInput={(params) => (
-                  <TextField {...params} variant="filled" fullWidth required />
-                )}
-              />
-            </LocalizationProvider>
+          <form action="" onSubmit={submitHandler} >
 
-            <ToggleButtonGroup
+            <TextField
+              variant="filled"
+              margin="normal"
+              required
+              fullWidth
+              label="Daily Goals Program Name"
+              autoFocus
+              color="secondary"
+              inputProps={{ min: 10, max: 30 }}
+            />
+
+            <Typography variant="div" component="div">
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <MobileDatePicker
+                  label="Program Start Day"
+                  inputFormat="MM/dd/yyyy"
+                  value={date}
+                  onChange={(date) => setDate(date)}
+                  renderInput={(params) => (
+                    <TextField {...params} variant="filled" fullWidth required />
+                  )}
+                  minDate={new Date()}
+
+                />
+              </LocalizationProvider>
+
+              <ToggleButtonGroup
               value={alignment}
               exclusive
               onChange={handleAlignment}
@@ -113,44 +152,59 @@ const Home = () => {
                 Fifteen Days
               </ToggleButton>
             </ToggleButtonGroup>
-          </Typography>
 
-          <TextField
-            variant="filled"
-            margin="normal"
-            required
-            label="Type Your Goals"
-            color="secondary"
-            fullWidth
-            value={goalName}
-            onChange={e => setGoalName(e.target.value)}
-          />
 
-          <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal}>Add</Button>
+            </Typography>
 
-          <List
-            sx={{
-              marginTop: "1rem",
-              width: '100%',
-              bgcolor: 'background.paper',
-              overflow: 'auto',
-              maxHeight: 300,
-              '& ul': { padding: 0 },
-            }}
-            subheader={<li />}
+            <TextField
+              variant="filled"
+              margin="normal"
+              label="Type Your Goals"
+              color="secondary"
+              fullWidth
+              value={goalName}
+              onChange={e => setGoalName(e.target.value)}
+              disabled={goalName.length > 15 ? true : false}
+              InputProps={{
+                endAdornment: <IconButton onClick={() =>
+                  setGoalName("")
+                }>
+                  <ClearIcon />
+                </IconButton>
+              }}
+            />
 
-          >
-            {goals.map((item, i) => (
-              <li key={i}>
-                <ul>
-                  <ListItem>
-                    <ListItemText primary={item.title} />
-                    <Button variant="contained" color="error" size="medium">Remove</Button>
-                  </ListItem>
-                </ul>
-              </li>
-            ))}
-          </List>
+            <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal}>Add</Button>
+
+            <List
+              sx={{
+                marginTop: "1rem",
+                width: '100%',
+                bgcolor: 'background.paper',
+                overflow: 'auto',
+                maxHeight: 300,
+                '& ul': { padding: 0 },
+              }}
+              subheader={<li />}
+
+            >
+              {goals.map((item, i) => (
+                <li key={i}>
+                  <ul>
+                    <ListItem>
+                      <ListItemText primary={item.title} />
+                      <Button variant="outlined" color="error" size="medium" onClick={() => deleteDailyGoal(item.id)}>Remove</Button>
+                    </ListItem>
+                  </ul>
+                </li>
+              ))}
+            </List>
+
+            <Typography variant="div" component="div" sx={CreateButtonStyle}>
+              <Button variant="outlined" color="primary" type="submit" fullWidth>Create</Button>
+            </Typography>
+
+          </form>
         </Box>
       </Modal>
     </div>
