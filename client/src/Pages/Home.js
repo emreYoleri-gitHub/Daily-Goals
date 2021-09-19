@@ -1,28 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { IconButton, List, ListItem, ListItemText, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, TextField } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ClearIcon from '@mui/icons-material/Clear';
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import MobileDatePicker from '@mui/lab/MobileDatePicker';
+import ListItemButton from '@mui/material/ListItemButton';
 import Message from "../Components/Alert"
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "auto",
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
+
 
 const buttonStyle = {
   display: "flex",
@@ -35,22 +26,47 @@ const CreateButtonStyle = {
   justifyContent: "flex-end",
 }
 
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height
+  };
+}
+
 const Home = () => {
   const [open, setOpen] = useState(true);
   const [error, setError] = useState("")
   const [date, setDate] = useState(null);
+  const [howManyDay, setHowManyDay] = useState(null)
   const [goals, setGoals] = useState([])
   const [goalName, setGoalName] = useState("")
 
   const handleClose = () => setOpen(false);
 
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
-  const [alignment, setAlignment] = useState("left");
-  
+  useEffect(() => {
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
 
-  const handleAlignment = (event, newAlignment) => {
-    setAlignment(newAlignment);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const style = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: windowDimensions.width > 1000 ? windowDimensions.width / 1.75 : "90%",
+    bgcolor: "background.paper",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
   };
+
 
   const addDailyGoal = () => {
     if (goalName.length <= 5) {
@@ -134,31 +150,25 @@ const Home = () => {
                 />
               </LocalizationProvider>
 
-              <ToggleButtonGroup
-              value={alignment}
-              exclusive
-              onChange={handleAlignment}
-              fullWidth
-            >
-              <ToggleButton value="fiveday" style={{ marginTop: "1rem" }}>
-                Five Days
-              </ToggleButton>
-
-              <ToggleButton value="tenday" style={{ marginTop: "1rem" }}>
-                Ten Days
-              </ToggleButton>
-
-              <ToggleButton value="fifteenday" style={{ marginTop: "1rem" }}>
-                Fifteen Days
-              </ToggleButton>
-            </ToggleButtonGroup>
-
+              <TextField
+                variant="filled"
+                type="number"
+                margin="dense"
+                required
+                fullWidth
+                label="How many days will it take?"
+                autoFocus
+                color="secondary"
+                inputProps={{ min: 5, max: 30 }}
+                value={howManyDay}
+                onChange={e => setHowManyDay(e.target.value)}
+              />
 
             </Typography>
 
             <TextField
               variant="filled"
-              margin="normal"
+              margin="dense"
               label="Type Your Goals"
               color="secondary"
               fullWidth
@@ -174,7 +184,7 @@ const Home = () => {
               }}
             />
 
-            <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal}>Add</Button>
+            <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal} style={{ marginTop: ".6rem" }}>Add</Button>
 
             <List
               sx={{
@@ -189,11 +199,15 @@ const Home = () => {
 
             >
               {goals.map((item, i) => (
+
                 <li key={i}>
                   <ul>
                     <ListItem>
-                      <ListItemText primary={item.title} />
-                      <Button variant="outlined" color="error" size="medium" onClick={() => deleteDailyGoal(item.id)}>Remove</Button>
+                      <ListItemButton>
+                        <ListItemText primary={item.title} />
+                        <Button variant="outlined" color="error" size="medium" onClick={() => deleteDailyGoal(item.id)}>Remove</Button>
+
+                      </ListItemButton>
                     </ListItem>
                   </ul>
                 </li>
@@ -201,7 +215,7 @@ const Home = () => {
             </List>
 
             <Typography variant="div" component="div" sx={CreateButtonStyle}>
-              <Button variant="outlined" color="primary" type="submit" fullWidth>Create</Button>
+              <Button variant="outlined" size="large" color="primary" type="submit" fullWidth>Create</Button>
             </Typography>
 
           </form>
