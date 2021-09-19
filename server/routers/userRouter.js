@@ -44,7 +44,7 @@ router.post("/signin", async (req, res) => {
 
 router.post("/signup", async (req, res) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, name, surname } = req.body;
     const userExist = await User.findOne({ email });
 
     if (userExist)
@@ -56,7 +56,7 @@ router.post("/signup", async (req, res) => {
 
     const user = await User.create({
       email,
-      name: `${firstName} ${lastName}`,
+      name: `${name} ${surname}`,
       password: hashedPassword,
     });
 

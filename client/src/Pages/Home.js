@@ -1,75 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
-import Box from "@mui/material/Box";
+import Avatar from '@mui/material/Avatar';
+import CssBaseline from '@mui/material/CssBaseline';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import Container from '@mui/material/Container';
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
-import { IconButton, List, ListItem, ListItemText, TextField } from "@mui/material";
-import CancelIcon from "@mui/icons-material/Cancel";
-import ClearIcon from '@mui/icons-material/Clear';
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import MobileDatePicker from '@mui/lab/MobileDatePicker';
 import ListItemButton from '@mui/material/ListItemButton';
+import { IconButton, List, ListItem, ListItemText } from "@mui/material";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { bindActionCreators } from "redux";
+import { useDispatch, useSelector } from "react-redux"
+import { goalActions } from "../Redux/Actions/index"
 import Message from "../Components/Alert"
 
-
-
-const buttonStyle = {
-  display: "flex",
-  justifyContent: "flex-end",
-  marginBottom: "1rem",
-};
+const theme = createTheme();
 
 const CreateButtonStyle = {
+  marginTop: "1rem",
   display: "flex",
   justifyContent: "flex-end",
 }
 
-function getWindowDimensions() {
-  const { innerWidth: width, innerHeight: height } = window;
-  return {
-    width,
-    height
-  };
-}
+const Home = ({ history }) => {
 
-const Home = () => {
-  const [open, setOpen] = useState(true);
+  const [programName, setProgramName] = useState("")
   const [error, setError] = useState("")
-  const [date, setDate] = useState(null);
-  const [howManyDay, setHowManyDay] = useState(null)
+  const [date, setDate] = useState(new Date());
+  const [howManyDay, setHowManyDay] = useState("")
   const [goals, setGoals] = useState([])
   const [goalName, setGoalName] = useState("")
 
-  const handleClose = () => setOpen(false);
 
-  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
-  useEffect(() => {
-    function handleResize() {
-      setWindowDimensions(getWindowDimensions());
-    }
+  const dispatch = useDispatch()
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { currentUser } = useSelector(state => state.users)
 
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: windowDimensions.width > 1000 ? windowDimensions.width / 1.75 : "90%",
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-  };
-
+/*   if (currentUser) history.push("/")
+ */  const { createGoalProgram } = bindActionCreators(goalActions, dispatch)
 
   const addDailyGoal = () => {
-    if (goalName.length <= 5) {
+    if (goalName.length < 5) {
       setError("Goal name must be at least 5 characters")
     } else if (goals.find(item => item.title.toLowerCase() === goalName.toLowerCase())) {
       setError("This goal has already been added")
@@ -95,36 +73,41 @@ const Home = () => {
     setGoals([...goals.filter(item => item.id !== id)])
   }
 
-  const submitHandler = e => {
+  const submitHandler = async (e) => {
     e.preventDefault()
     if (goals.length <= 3) setError("The number of goals must be at least three")
     else {
-      /* code... */
+      await createGoalProgram()
     }
   }
+
   return (
-    <div>
-      <Modal open={open}>
-        <Box sx={style}>
-          <Typography variant="div" component="div" sx={buttonStyle}>
-            <IconButton onClick={handleClose}>
-              <CancelIcon />
-            </IconButton>
+    <ThemeProvider theme={theme}>
+      <Container component="main" maxWidth="xs">
+        <CssBaseline />
+        <Box
+          sx={{
+            marginTop: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Avatar sx={{ mb: 3, bgcolor: 'secondary.main' }}>
+            <AddCircleIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5" >
+            Create a New Daily Program
           </Typography>
 
-          <Typography variant="h5" component="h3">
+          {error.length ? <Message > {error} </Message> : null}
 
-            <div className="text-center mb-1 mt-1">
-              Create a New Daily Goals
-            </div>
 
-            {error.length ? <Message> {error} </Message> : null}
-
-          </Typography>
-
-          <form action="" onSubmit={submitHandler} >
+          <form onSubmit={submitHandler}>
 
             <TextField
+              value={programName}
+              onChange={e => setProgramName(e.target.value)}
               variant="filled"
               margin="normal"
               required
@@ -132,39 +115,37 @@ const Home = () => {
               label="Daily Goals Program Name"
               autoFocus
               color="secondary"
-              inputProps={{ min: 10, max: 30 }}
+              inputProps={{ minLength: 10, maxLength: 30 }}
             />
 
-            <Typography variant="div" component="div">
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <MobileDatePicker
-                  label="Program Start Day"
-                  inputFormat="MM/dd/yyyy"
-                  value={date}
-                  onChange={(date) => setDate(date)}
-                  renderInput={(params) => (
-                    <TextField {...params} variant="filled" fullWidth required />
-                  )}
-                  minDate={new Date()}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <MobileDatePicker
+                label="Program Start Day"
+                inputFormat="MM/dd/yyyy"
+                value={date}
+                onChange={(date) => setDate(date)}
+                renderInput={(params) => (
+                  <TextField {...params} variant="filled" fullWidth required
+                  />
+                )}
+                minDate={new Date()}
 
-                />
-              </LocalizationProvider>
-
-              <TextField
-                variant="filled"
-                type="number"
-                margin="dense"
-                required
-                fullWidth
-                label="How many days will it take?"
-                autoFocus
-                color="secondary"
-                inputProps={{ min: 5, max: 30 }}
-                value={howManyDay}
-                onChange={e => setHowManyDay(e.target.value)}
               />
+            </LocalizationProvider>
 
-            </Typography>
+            <TextField
+              variant="filled"
+              type="number"
+              margin="dense"
+              required
+              fullWidth
+              label="How many days will it take?"
+              autoFocus
+              color="secondary"
+              inputProps={{ min: 5, max: 30 }}
+              value={howManyDay}
+              onChange={e => setHowManyDay(e.target.value)}
+            />
 
             <TextField
               variant="filled"
@@ -176,23 +157,21 @@ const Home = () => {
               onChange={e => setGoalName(e.target.value)}
               disabled={goalName.length > 15 ? true : false}
               InputProps={{
-                endAdornment: <IconButton onClick={() =>
-                  setGoalName("")
+                endAdornment: <IconButton onClick={
+                  addDailyGoal
                 }>
-                  <ClearIcon />
+                  <AddCircleIcon />
                 </IconButton>
               }}
             />
 
-            <Button variant="contained" size="large" fullWidth color="secondary" onClick={addDailyGoal} style={{ marginTop: ".6rem" }}>Add</Button>
-
-            <List
+            {goals.length ? <List
               sx={{
                 marginTop: "1rem",
                 width: '100%',
                 bgcolor: 'background.paper',
                 overflow: 'auto',
-                maxHeight: 300,
+                maxHeight: 250,
                 '& ul': { padding: 0 },
               }}
               subheader={<li />}
@@ -205,24 +184,25 @@ const Home = () => {
                     <ListItem>
                       <ListItemButton>
                         <ListItemText primary={item.title} />
-                        <Button variant="outlined" color="error" size="medium" onClick={() => deleteDailyGoal(item.id)}>Remove</Button>
+                        <IconButton color="error" onClick={() => deleteDailyGoal(item.id)}><DeleteForeverIcon /></IconButton>
 
                       </ListItemButton>
                     </ListItem>
                   </ul>
                 </li>
               ))}
-            </List>
+            </List> : null}
 
             <Typography variant="div" component="div" sx={CreateButtonStyle}>
-              <Button variant="outlined" size="large" color="primary" type="submit" fullWidth>Create</Button>
+              <Button variant="contained" size="large" color="secondary" type="submit" fullWidth>Create</Button>
             </Typography>
+
 
           </form>
         </Box>
-      </Modal>
-    </div>
+      </Container>
+    </ThemeProvider>
   );
-
 }
-export default Home;
+
+export default Home

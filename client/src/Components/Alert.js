@@ -3,7 +3,7 @@ import Alert from '@mui/material/Alert';
 
 const Message = ({ children }) => {
     return (
-        <Alert severity="error">{children}</Alert>
+        <Alert severity="error" sx={{ marginTop: 2 }}>{children}</Alert>
     )
 }
 

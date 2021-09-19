@@ -8,7 +8,10 @@ const initialState = {
 const userReducer = (state = initialState, action) => {
   switch (action.type) {
     case userTypes.SIGN_IN_SUCCESS:
-      localStorage.setItem("user", JSON.stringify(action.payload));
+      localStorage.setItem("user", JSON.stringify({
+        email: action.payload.email,
+        password: action.payload.password,
+      }));
 
       return {
         ...state,

@@ -90,8 +90,7 @@ const SignIn = () => {
   const { currentUser } = useSelector((state) => state.users);
 
   if (localStorage.getItem("user") || currentUser) {
-    signIn(JSON.parse(localStorage.getItem("user")));
-    console.log(JSON.parse(localStorage.getItem("user")));
+    signIn(JSON.parse(localStorage.getItem("user")))
     history.push("/");
   }
 
